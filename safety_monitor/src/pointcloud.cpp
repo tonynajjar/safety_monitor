@@ -47,16 +47,13 @@ void PointCloud::configure()
     throw std::runtime_error{"Failed to lock node"};
   }
 
-  std::string source_topic, topic_out;
+  std::string source_topic;
 
-  getParameters(source_topic, topic_out);
+  getParameters(source_topic);
 
   data_sub_ = node->create_subscription<sensor_msgs::msg::PointCloud2>(
     source_topic, rclcpp::SensorDataQoS(),
     std::bind(&PointCloud::dataCallback, this, std::placeholders::_1));
-
-  pub_ = node->create_publisher<safety_monitor_msgs::msg::FieldStates>(
-    topic_out, rclcpp::SystemDefaultsQoS());
 }
 
 void PointCloud::getData(
@@ -85,14 +82,14 @@ void PointCloud::getData(
   }
 }
 
-void PointCloud::getParameters(std::string & source_topic, std::string & topic_out)
+void PointCloud::getParameters(std::string & source_topic)
 {
   auto node = node_.lock();
   if (!node) {
     throw std::runtime_error{"Failed to lock node"};
   }
 
-  getCommonParameters(source_topic, topic_out);
+  getCommonParameters(source_topic);
 
   nav2_util::declare_parameter_if_not_declared(
     node, source_name_ + ".min_height", rclcpp::ParameterValue(0.05));

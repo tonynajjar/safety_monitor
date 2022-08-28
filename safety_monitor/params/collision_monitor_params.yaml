@@ -7,8 +7,8 @@ collision_monitor:
     # Footprint could be "polygon" type with dynamically set footprint from footprint_topic
     # or "circle" type with static footprint set by radius. "footprint_topic" parameter
     # to be ignored in circular case.
-    observation_sources: ["scan"]
-    scan:
+    observation_sources: ["forward", "backward"]
+    forward:
       type: "scan"
       topic: "/amr2/forward_lidar"
       topic_out: "/amr2/forward_lidar/fields"
@@ -16,6 +16,24 @@ collision_monitor:
       Emergency:
         type: "polygon"
         frame_id: "forward_lidar"
+        points: [0.3, 0.3, 0.3, -0.3, 0.0, -0.3, 0.0, 0.3]
+        max_points: 3
+        visualize: True
+        polygon_pub_topic: "emergency"
+      Warning:
+        type: "polygon"
+        frame_id: "forward_lidar"
+        points: [0.4, 0.4, 0.4, -0.4, -0.4, -0.4, -0.4, 0.4]
+        max_points: 3
+        visualize: True
+        polygon_pub_topic: "warning"
+    backward:
+      type: "scan"
+      topic: "/amr2/backward_lidar"
+      topic_out: "/amr2/forward_lidar/fields"
+      polygons: ["Emergency", "Warning"]
+      Emergency:
+        type: "polygon"
         points: [0.3, 0.3, 0.3, -0.3, 0.0, -0.3, 0.0, 0.3]
         max_points: 3
         visualize: True

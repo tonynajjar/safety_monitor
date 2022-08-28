@@ -233,19 +233,17 @@ void CollisionMonitor::process()
     return;
   }
 
-  // Points array collected from different data sources in a robot base frame
-  std::vector<Point> collision_points;
-
   // Fill collision_points array from different data sources
   for (std::shared_ptr<Source> source : sources_) {
     auto msg = safety_monitor_msgs::msg::FieldStates();
+    std::vector<Point> collision_points;
     source->getData(curr_time, collision_points);
 
     for (auto polygon : source->polygons) {
       msg.names.push_back(polygon->getName());
       msg.triggered.push_back(polygon->getPointsInside(collision_points) > polygon->getMaxPoints());
     }
-    source->pub_.publish(msg);
+    source->pub_->publish(msg);
   }
   publishPolygons();
 }

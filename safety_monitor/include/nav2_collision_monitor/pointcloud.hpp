@@ -15,7 +15,6 @@
 #ifndef NAV2_COLLISION_MONITOR__POINTCLOUD_HPP_
 #define NAV2_COLLISION_MONITOR__POINTCLOUD_HPP_
 
-#include "safety_monitor_msgs/msg/field_states.hpp"
 #include "sensor_msgs/msg/point_cloud2.hpp"
 
 #include "nav2_collision_monitor/source.hpp"
@@ -63,9 +62,8 @@ protected:
   /**
    * @brief Getting sensor-specific ROS-parameters
    * @param source_topic Output name of source subscription topic
-   * @param topic_out Topic name for triggered polygons
    */
-  void getParameters(std::string & source_topic, std::string & topic_out);
+  void getParameters(std::string & source_topic);
 
   /**
    * @brief PointCloud data callback
@@ -77,9 +75,6 @@ protected:
 
   /// @brief PointCloud data subscriber
   rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr data_sub_;
-
-  /// @brief FieldStates publisher
-  rclcpp_lifecycle::LifecyclePublisher<safety_monitor_msgs::msg::FieldStates>::SharedPtr pub_;
 
   // Minimum and maximum height of PointCloud projected to 2D space
   double min_height_, max_height_;

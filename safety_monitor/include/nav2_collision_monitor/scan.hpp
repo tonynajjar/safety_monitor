@@ -16,7 +16,6 @@
 #define NAV2_COLLISION_MONITOR__SCAN_HPP_
 
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "safety_monitor_msgs/msg/field_states.hpp"
 
 #include "nav2_collision_monitor/source.hpp"
 
@@ -70,9 +69,6 @@ protected:
 
   /// @brief Laser scanner data subscriber
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr data_sub_;
-
-  /// @brief FieldStates publisher
-  rclcpp_lifecycle::LifecyclePublisher<safety_monitor_msgs::msg::FieldStates>::SharedPtr pub_;
 
   /// @brief Latest data obtained from laser scanner
   sensor_msgs::msg::LaserScan::ConstSharedPtr data_;

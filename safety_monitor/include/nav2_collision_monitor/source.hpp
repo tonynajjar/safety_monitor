@@ -20,6 +20,7 @@
 #include <string>
 
 #include "rclcpp/rclcpp.hpp"
+#include "safety_monitor_msgs/msg/field_states.hpp"
 
 #include "nav2_util/lifecycle_node.hpp"
 
@@ -63,13 +64,15 @@ public:
   /// @brief Polygons array
   std::vector<std::shared_ptr<Polygon>> polygons;
 
+  /// @brief FieldStates publisher
+  rclcpp_lifecycle::LifecyclePublisher<safety_monitor_msgs::msg::FieldStates>::SharedPtr pub_;
+
 protected:
   /**
    * @brief Supporting routine obtaining ROS-parameters common for all data sources
    * @param source_topic Output name of source subscription topic
-   * @param topic_out Topic name for triggered polygons
    */
-  void getCommonParameters(std::string & source_topic, std::string & topic_out);
+  void getCommonParameters(std::string & source_topic);
 
   /**
    * @brief Checks whether the source data might be considered as valid

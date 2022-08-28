@@ -35,7 +35,7 @@ Source::~Source()
 {
 }
 
-void Source::getCommonParameters(std::string & source_topic, std::string & topic_out)
+void Source::getCommonParameters(std::string & source_topic)
 {
   auto node = node_.lock();
   if (!node) {
@@ -49,7 +49,11 @@ void Source::getCommonParameters(std::string & source_topic, std::string & topic
   nav2_util::declare_parameter_if_not_declared(
     node, source_name_ + ".topic_out",
     rclcpp::ParameterValue("out"));  // Set default topic for laser scanner
-  topic_out = node->get_parameter(source_name_ + ".topic_out").as_string();
+  std::string topic_out = node->get_parameter(source_name_ + ".topic_out").as_string();
+
+  pub_ = node->create_publisher<safety_monitor_msgs::msg::FieldStates>(
+    topic_out, rclcpp::SystemDefaultsQoS()); // TODO: move to a configuration step
+  pub_->on_activate();
 }
 
 bool Source::sourceValid(
