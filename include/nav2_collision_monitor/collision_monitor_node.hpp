@@ -113,6 +113,9 @@ protected:
 
   // ----- Variables -----
 
+  /// @brief Timer to run main process
+  rclcpp::TimerBase::SharedPtr timer_;
+
   /// @brief Polygons array
   std::vector<std::shared_ptr<Polygon>> polygons_;
 
@@ -122,7 +125,6 @@ protected:
 
   /// @brief Whether main routine is active
   bool process_active_;
-  rclcpp::TimerBase::SharedPtr timer_;
 
 };  // class CollisionMonitor
 
