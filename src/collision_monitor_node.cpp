@@ -42,14 +42,6 @@ CollisionMonitor::on_configure(const rclcpp_lifecycle::State & /*state*/)
 {
   RCLCPP_INFO(get_logger(), "Configuring");
 
-  // Transform buffer and listener initialization
-  tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
-  auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
-    this->get_node_base_interface(),
-    this->get_node_timers_interface());
-  tf_buffer_->setCreateTimerInterface(timer_interface);
-  tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
-
   // Obtaining ROS parameters
   if (!getParameters()) {
     return nav2_util::CallbackReturn::FAILURE;
@@ -108,9 +100,6 @@ CollisionMonitor::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
   polygons_.clear();
   sources_.clear();
 
-  tf_listener_.reset();
-  tf_buffer_.reset();
-
   return nav2_util::CallbackReturn::SUCCESS;
 }
 
@@ -124,38 +113,27 @@ CollisionMonitor::on_shutdown(const rclcpp_lifecycle::State & /*state*/)
 
 bool CollisionMonitor::getParameters()
 {
-  std::string base_frame_id;
-  tf2::Duration transform_tolerance;
   rclcpp::Duration source_timeout(2.0, 0.0);
 
   auto node = shared_from_this();
 
   nav2_util::declare_parameter_if_not_declared(
-    node, "base_frame_id", rclcpp::ParameterValue("base_footprint"));
-  base_frame_id = get_parameter("base_frame_id").as_string();
-  nav2_util::declare_parameter_if_not_declared(
-    node, "transform_tolerance", rclcpp::ParameterValue(0.1));
-  transform_tolerance =
-    tf2::durationFromSec(get_parameter("transform_tolerance").as_double());
-  nav2_util::declare_parameter_if_not_declared(
     node, "source_timeout", rclcpp::ParameterValue(2.0));
   source_timeout =
     rclcpp::Duration::from_seconds(get_parameter("source_timeout").as_double());
 
-  if (!configurePolygons(base_frame_id, transform_tolerance)) {
+  if (!configurePolygons()) {
     return false;
   }
 
-  if (!configureSources(base_frame_id, transform_tolerance, source_timeout)) {
+  if (!configureSources(source_timeout)) {
     return false;
   }
 
   return true;
 }
 
-bool CollisionMonitor::configurePolygons(
-  const std::string & base_frame_id,
-  const tf2::Duration & transform_tolerance)
+bool CollisionMonitor::configurePolygons()
 {
   try {
     auto node = shared_from_this();
@@ -172,11 +150,11 @@ bool CollisionMonitor::configurePolygons(
       if (polygon_type == "polygon") {
         polygons_.push_back(
           std::make_shared<Polygon>(
-            node, polygon_name, tf_buffer_, base_frame_id, transform_tolerance));
+            node, polygon_name));
       } else if (polygon_type == "circle") {
         polygons_.push_back(
           std::make_shared<Circle>(
-            node, polygon_name, tf_buffer_, base_frame_id, transform_tolerance));
+            node, polygon_name));
       } else {  // Error if something else
         RCLCPP_ERROR(
           get_logger(),
@@ -198,10 +176,7 @@ bool CollisionMonitor::configurePolygons(
   return true;
 }
 
-bool CollisionMonitor::configureSources(
-  const std::string & base_frame_id,
-  const tf2::Duration & transform_tolerance,
-  const rclcpp::Duration & source_timeout)
+bool CollisionMonitor::configureSources(const rclcpp::Duration & source_timeout)
 {
   try {
     auto node = shared_from_this();
@@ -218,16 +193,14 @@ bool CollisionMonitor::configureSources(
 
       if (source_type == "scan") {
         std::shared_ptr<Scan> s = std::make_shared<Scan>(
-          node, source_name, tf_buffer_, base_frame_id,
-          transform_tolerance, source_timeout);
+          node, source_name, source_timeout);
 
         s->configure();
 
         sources_.push_back(s);
       } else if (source_type == "pointcloud") {
         std::shared_ptr<PointCloud> p = std::make_shared<PointCloud>(
-          node, source_name, tf_buffer_, base_frame_id,
-          transform_tolerance, source_timeout);
+          node, source_name, source_timeout);
 
         p->configure();
 

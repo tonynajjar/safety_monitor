@@ -23,13 +23,9 @@ namespace nav2_collision_monitor
 Scan::Scan(
   const nav2_util::LifecycleNode::WeakPtr & node,
   const std::string & source_name,
-  const std::shared_ptr<tf2_ros::Buffer> tf_buffer,
-  const std::string & base_frame_id,
-  const tf2::Duration & transform_tolerance,
   const rclcpp::Duration & source_timeout)
 : Source(
-    node, source_name, tf_buffer, base_frame_id,
-    transform_tolerance, source_timeout),
+    node, source_name, source_timeout),
   data_(nullptr)
 {
   RCLCPP_INFO(logger_, "[%s]: Creating Scan", source_name_.c_str());

@@ -27,12 +27,8 @@ namespace nav2_collision_monitor
 
 Polygon::Polygon(
   const nav2_util::LifecycleNode::WeakPtr & node,
-  const std::string & polygon_name,
-  const std::shared_ptr<tf2_ros::Buffer> tf_buffer,
-  const std::string & base_frame_id,
-  const tf2::Duration & transform_tolerance)
-: node_(node), polygon_name_(polygon_name), tf_buffer_(tf_buffer),
-  base_frame_id_(base_frame_id), transform_tolerance_(transform_tolerance)
+  const std::string & polygon_name)
+: node_(node), polygon_name_(polygon_name)
 {
   RCLCPP_INFO(logger_, "[%s]: Creating Polygon", polygon_name_.c_str());
 }
@@ -131,7 +127,7 @@ void Polygon::publish() const
   std::unique_ptr<geometry_msgs::msg::PolygonStamped> poly_s =
     std::make_unique<geometry_msgs::msg::PolygonStamped>();
   poly_s->header.stamp = node->now();
-  poly_s->header.frame_id = base_frame_id_;
+  poly_s->header.frame_id = "TODO"; // TODO: this should be the source frame
   poly_s->polygon = polygon_;
 
   // Publish polygon
@@ -146,9 +142,6 @@ bool Polygon::getCommonParameters(std::string & polygon_pub_topic)
   }
 
   try {
-    // Get action type.
-    // Leave it not initialized: the will cause an error if it will not set.
-
     nav2_util::declare_parameter_if_not_declared(
       node, polygon_name_ + ".max_points", rclcpp::ParameterValue(3));
     max_points_ = node->get_parameter(polygon_name_ + ".max_points").as_int();

@@ -1,8 +1,6 @@
 collision_monitor:
   ros__parameters:
     use_sim_time: True
-    base_frame_id: "base_link"
-    transform_tolerance: 0.5
     source_timeout: 5.0
     # Polygons represent zone around the robot for "stop" and "slowdown" action types,
     # and robot footprint for "approach" action type.

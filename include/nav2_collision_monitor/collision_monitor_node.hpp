@@ -95,28 +95,19 @@ protected:
    * @return True if all parameters were obtained or false in failure case
    */
   bool getParameters();
-  
+
   /**
    * @brief Supporting routine creating and configuring all polygons
-   * @param base_frame_id Robot base frame ID
-   * @param transform_tolerance Transform tolerance
    * @return True if all polygons were configured successfully or false in failure case
    */
-  bool configurePolygons(
-    const std::string & base_frame_id,
-    const tf2::Duration & transform_tolerance);
+  bool configurePolygons();
   /**
    * @brief Supporting routine creating and configuring all data sources
-   * @param base_frame_id Robot base frame ID
    * source->base time inerpolated transform.
-   * @param transform_tolerance Transform tolerance
    * @param source_timeout Maximum time interval in which data is considered valid
    * @return True if all sources were configured successfully or false in failure case
    */
-  bool configureSources(
-    const std::string & base_frame_id,
-    const tf2::Duration & transform_tolerance,
-    const rclcpp::Duration & source_timeout);
+  bool configureSources(const rclcpp::Duration & source_timeout);
 
   /**
    * @brief Main processing routine
@@ -130,11 +121,6 @@ protected:
   void publishPolygons() const;
 
   // ----- Variables -----
-
-  /// @brief TF buffer
-  std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
-  /// @brief TF listener
-  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
   /// @brief Polygons array
   std::vector<std::shared_ptr<Polygon>> polygons_;
