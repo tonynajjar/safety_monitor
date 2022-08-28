@@ -122,6 +122,7 @@ protected:
 
   /// @brief Whether main routine is active
   bool process_active_;
+  rclcpp::TimerBase::SharedPtr timer_;
 
 };  // class CollisionMonitor
 

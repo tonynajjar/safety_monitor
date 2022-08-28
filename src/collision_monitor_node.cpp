@@ -45,7 +45,7 @@ CollisionMonitor::on_configure(const rclcpp_lifecycle::State & /*state*/)
     return nav2_util::CallbackReturn::FAILURE;
   }
 
-  rclcpp::create_timer(
+  timer_ = rclcpp::create_timer(
     this, this->get_clock(), std::chrono::milliseconds(1),
     std::bind(&CollisionMonitor::process, this));
   return nav2_util::CallbackReturn::SUCCESS;
