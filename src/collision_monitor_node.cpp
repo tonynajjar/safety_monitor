@@ -47,6 +47,9 @@ CollisionMonitor::on_configure(const rclcpp_lifecycle::State & /*state*/)
     return nav2_util::CallbackReturn::FAILURE;
   }
 
+  rclcpp::create_timer(
+    this, this->get_clock(), std::chrono::milliseconds(1),
+    std::bind(&CollisionMonitor::process, this));
   return nav2_util::CallbackReturn::SUCCESS;
 }
 
@@ -122,54 +125,7 @@ bool CollisionMonitor::getParameters()
   source_timeout =
     rclcpp::Duration::from_seconds(get_parameter("source_timeout").as_double());
 
-  if (!configurePolygons()) {
-    return false;
-  }
-
   if (!configureSources(source_timeout)) {
-    return false;
-  }
-
-  return true;
-}
-
-bool CollisionMonitor::configurePolygons()
-{
-  try {
-    auto node = shared_from_this();
-
-    nav2_util::declare_parameter_if_not_declared(
-      node, "polygons", rclcpp::ParameterValue(std::vector<std::string>()));
-    std::vector<std::string> polygon_names = get_parameter("polygons").as_string_array();
-    for (std::string polygon_name : polygon_names) {
-      // Leave it not initialized: the will cause an error if it will not set
-      nav2_util::declare_parameter_if_not_declared(
-        node, polygon_name + ".type", rclcpp::PARAMETER_STRING);
-      const std::string polygon_type = get_parameter(polygon_name + ".type").as_string();
-
-      if (polygon_type == "polygon") {
-        polygons_.push_back(
-          std::make_shared<Polygon>(
-            node, polygon_name));
-      } else if (polygon_type == "circle") {
-        polygons_.push_back(
-          std::make_shared<Circle>(
-            node, polygon_name));
-      } else {  // Error if something else
-        RCLCPP_ERROR(
-          get_logger(),
-          "[%s]: Unknown polygon type: %s",
-          polygon_name.c_str(), polygon_type.c_str());
-        return false;
-      }
-
-      // Configure last added polygon
-      if (!polygons_.back()->configure()) {
-        return false;
-      }
-    }
-  } catch (const std::exception & ex) {
-    RCLCPP_ERROR(get_logger(), "Error while getting parameters: %s", ex.what());
     return false;
   }
 
@@ -212,6 +168,39 @@ bool CollisionMonitor::configureSources(const rclcpp::Duration & source_timeout)
           source_name.c_str(), source_type.c_str());
         return false;
       }
+
+      nav2_util::declare_parameter_if_not_declared(
+        node, source_name + ".polygons", rclcpp::ParameterValue(std::vector<std::string>()));
+      std::vector<std::string> polygon_names =
+        get_parameter(source_name + ".polygons").as_string_array();
+      for (std::string polygon_name : polygon_names) {
+        polygon_name = source_name + "." + polygon_name;
+        nav2_util::declare_parameter_if_not_declared(
+          node, polygon_name + ".type", rclcpp::PARAMETER_STRING);
+        const std::string polygon_type = get_parameter(polygon_name + ".type").as_string();
+
+        if (polygon_type == "polygon") {
+          polygons_.push_back(
+            std::make_shared<Polygon>(
+              node, polygon_name));
+        } else if (polygon_type == "circle") {
+          polygons_.push_back(
+            std::make_shared<Circle>(
+              node, polygon_name));
+        } else { // Error if something else
+          RCLCPP_ERROR(
+            get_logger(),
+            "[%s]: Unknown polygon type: %s",
+            polygon_name.c_str(), polygon_type.c_str());
+          return false;
+        }
+
+        // Configure last added polygon
+        if (!polygons_.back()->configure()) {
+          return false;
+        }
+      }
+
     }
   } catch (const std::exception & ex) {
     RCLCPP_ERROR(get_logger(), "Error while getting parameters: %s", ex.what());

@@ -27,7 +27,7 @@ from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
     # Environment
-    package_dir = get_package_share_directory('nav2_collision_monitor')
+    package_dir = get_package_share_directory('safety_monitor')
 
     # Constant parameters
     lifecycle_nodes = ['collision_monitor']
@@ -77,10 +77,9 @@ def generate_launch_description():
                         {'node_names': lifecycle_nodes}])
 
     start_collision_monitor_cmd = Node(
-            package='nav2_collision_monitor',
+            package='safety_monitor',
             executable='collision_monitor',
             output='screen',
-            remappings=[('/tf', '/amr2/tf'), ('/tf_static', '/amr2/tf_static')],
             emulate_tty=True,  # https://github.com/ros2/launch/issues/188
             parameters=[configured_params])
 

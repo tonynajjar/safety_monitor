@@ -97,11 +97,6 @@ protected:
   bool getParameters();
 
   /**
-   * @brief Supporting routine creating and configuring all polygons
-   * @return True if all polygons were configured successfully or false in failure case
-   */
-  bool configurePolygons();
-  /**
    * @brief Supporting routine creating and configuring all data sources
    * source->base time inerpolated transform.
    * @param source_timeout Maximum time interval in which data is considered valid

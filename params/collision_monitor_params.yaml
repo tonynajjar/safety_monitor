@@ -1,26 +1,26 @@
 collision_monitor:
   ros__parameters:
-    use_sim_time: True
+    use_sim_time: False # TODO: not working
     source_timeout: 5.0
     # Polygons represent zone around the robot for "stop" and "slowdown" action types,
     # and robot footprint for "approach" action type.
     # Footprint could be "polygon" type with dynamically set footprint from footprint_topic
     # or "circle" type with static footprint set by radius. "footprint_topic" parameter
     # to be ignored in circular case.
-    polygons: ["PolygonStop", "PolygonSlow"]
-    PolygonStop:
-      type: "polygon"
-      points: [0.3, 0.3, 0.3, -0.3, 0.0, -0.3, 0.0, 0.3]
-      max_points: 3
-      visualize: True
-      polygon_pub_topic: "polygon_stop"
-    PolygonSlow:
-      type: "polygon"
-      points: [0.4, 0.4, 0.4, -0.4, -0.4, -0.4, -0.4, 0.4]
-      max_points: 3
-      visualize: True
-      polygon_pub_topic: "polygon_slowdown"
     observation_sources: ["scan"]
     scan:
       type: "scan"
       topic: "/amr2/forward_lidar"
+      polygons: ["PolygonStop", "PolygonSlow"]
+      PolygonStop:
+        type: "polygon"
+        points: [0.3, 0.3, 0.3, -0.3, 0.0, -0.3, 0.0, 0.3]
+        max_points: 3
+        visualize: True
+        polygon_pub_topic: "polygon_stop"
+      PolygonSlow:
+        type: "polygon"
+        points: [0.4, 0.4, 0.4, -0.4, -0.4, -0.4, -0.4, 0.4]
+        max_points: 3
+        visualize: True
+        polygon_pub_topic: "polygon_slowdown"
