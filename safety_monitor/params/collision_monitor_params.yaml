@@ -19,29 +19,30 @@ collision_monitor:
         points: [0.3, 0.3, 0.3, -0.3, 0.0, -0.3, 0.0, 0.3]
         max_points: 3
         visualize: True
-        polygon_pub_topic: "emergency"
+        polygon_pub_topic: "/amr2/forward_lidar/emergency"
       Warning:
         type: "polygon"
         frame_id: "forward_lidar"
         points: [0.4, 0.4, 0.4, -0.4, -0.4, -0.4, -0.4, 0.4]
         max_points: 3
         visualize: True
-        polygon_pub_topic: "warning"
+        polygon_pub_topic: "/amr2/forward_lidar/warning"
     backward:
       type: "scan"
       topic: "/amr2/backward_lidar"
-      topic_out: "/amr2/forward_lidar/fields"
+      topic_out: "/amr2/backward_lidar/fields"
       polygons: ["Emergency", "Warning"]
       Emergency:
         type: "polygon"
+        frame_id: "backward_lidar"
         points: [0.3, 0.3, 0.3, -0.3, 0.0, -0.3, 0.0, 0.3]
         max_points: 3
         visualize: True
-        polygon_pub_topic: "emergency"
+        polygon_pub_topic: "/amr2/backward_lidar/emergency"
       Warning:
         type: "polygon"
         frame_id: "backward_lidar"
         points: [0.4, 0.4, 0.4, -0.4, -0.4, -0.4, -0.4, 0.4]
         max_points: 3
         visualize: True
-        polygon_pub_topic: "warning"
+        polygon_pub_topic: "/amr2/backward_lidar/warning"

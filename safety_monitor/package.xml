@@ -15,6 +15,7 @@
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>safety_monitor_msgs</depend>
+  <depend>visualization_msgs</depend>
   <depend>nav2_common</depend>
   <depend>nav2_util</depend>
 

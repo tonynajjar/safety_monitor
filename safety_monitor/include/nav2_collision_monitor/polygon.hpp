@@ -20,8 +20,8 @@
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/polygon_stamped.hpp"
 #include "geometry_msgs/msg/polygon.hpp"
+#include "visualization_msgs/msg/marker.hpp"
 
 #include "nav2_util/lifecycle_node.hpp"
 
@@ -96,6 +96,12 @@ public:
    */
   void publish() const;
 
+  /**
+   * @brief Helper function for creating a Point
+   */
+  geometry_msgs::msg::Point createPoint(const double& x, const double& y, const double& z) const;
+
+
 protected:
   /**
    * @brief Supporting routine obtaining ROS-parameters common for all shapes
@@ -141,7 +147,7 @@ protected:
   /// @brief Polygon points stored for later publishing
   geometry_msgs::msg::Polygon polygon_;
   /// @brief Polygon publisher for visualization purposes
-  rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::PolygonStamped>::SharedPtr polygon_pub_;
+  rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr polygon_pub_;
 
   /// @brief Polygon points (vertices)
   std::vector<Point> poly_;
