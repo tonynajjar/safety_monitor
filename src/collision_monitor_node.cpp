@@ -124,7 +124,7 @@ CollisionMonitor::on_shutdown(const rclcpp_lifecycle::State & /*state*/)
 
 bool CollisionMonitor::getParameters()
 {
-  std::string base_frame_id, odom_frame_id;
+  std::string base_frame_id;
   tf2::Duration transform_tolerance;
   rclcpp::Duration source_timeout(2.0, 0.0);
 
@@ -133,9 +133,6 @@ bool CollisionMonitor::getParameters()
   nav2_util::declare_parameter_if_not_declared(
     node, "base_frame_id", rclcpp::ParameterValue("base_footprint"));
   base_frame_id = get_parameter("base_frame_id").as_string();
-  nav2_util::declare_parameter_if_not_declared(
-    node, "odom_frame_id", rclcpp::ParameterValue("odom"));
-  odom_frame_id = get_parameter("odom_frame_id").as_string();
   nav2_util::declare_parameter_if_not_declared(
     node, "transform_tolerance", rclcpp::ParameterValue(0.1));
   transform_tolerance =
@@ -149,7 +146,7 @@ bool CollisionMonitor::getParameters()
     return false;
   }
 
-  if (!configureSources(base_frame_id, odom_frame_id, transform_tolerance, source_timeout)) {
+  if (!configureSources(base_frame_id, transform_tolerance, source_timeout)) {
     return false;
   }
 
@@ -203,7 +200,6 @@ bool CollisionMonitor::configurePolygons(
 
 bool CollisionMonitor::configureSources(
   const std::string & base_frame_id,
-  const std::string & odom_frame_id,
   const tf2::Duration & transform_tolerance,
   const rclcpp::Duration & source_timeout)
 {
@@ -222,7 +218,7 @@ bool CollisionMonitor::configureSources(
 
       if (source_type == "scan") {
         std::shared_ptr<Scan> s = std::make_shared<Scan>(
-          node, source_name, tf_buffer_, base_frame_id, odom_frame_id,
+          node, source_name, tf_buffer_, base_frame_id,
           transform_tolerance, source_timeout);
 
         s->configure();
@@ -230,7 +226,7 @@ bool CollisionMonitor::configureSources(
         sources_.push_back(s);
       } else if (source_type == "pointcloud") {
         std::shared_ptr<PointCloud> p = std::make_shared<PointCloud>(
-          node, source_name, tf_buffer_, base_frame_id, odom_frame_id,
+          node, source_name, tf_buffer_, base_frame_id,
           transform_tolerance, source_timeout);
 
         p->configure();

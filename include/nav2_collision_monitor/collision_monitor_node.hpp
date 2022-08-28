@@ -108,7 +108,6 @@ protected:
   /**
    * @brief Supporting routine creating and configuring all data sources
    * @param base_frame_id Robot base frame ID
-   * @param odom_frame_id Odometry frame ID. Used as global frame to get
    * source->base time inerpolated transform.
    * @param transform_tolerance Transform tolerance
    * @param source_timeout Maximum time interval in which data is considered valid
@@ -116,7 +115,6 @@ protected:
    */
   bool configureSources(
     const std::string & base_frame_id,
-    const std::string & odom_frame_id,
     const tf2::Duration & transform_tolerance,
     const rclcpp::Duration & source_timeout);
 

@@ -28,11 +28,10 @@ PointCloud::PointCloud(
   const std::string & source_name,
   const std::shared_ptr<tf2_ros::Buffer> tf_buffer,
   const std::string & base_frame_id,
-  const std::string & global_frame_id,
   const tf2::Duration & transform_tolerance,
   const rclcpp::Duration & source_timeout)
 : Source(
-    node, source_name, tf_buffer, base_frame_id, global_frame_id,
+    node, source_name, tf_buffer, base_frame_id,
     transform_tolerance, source_timeout),
   data_(nullptr)
 {
@@ -75,13 +74,6 @@ void PointCloud::getData(
     return;
   }
 
-  // Obtaining the transform to get data from source frame and time where it was received
-  // to the base frame and current time
-  tf2::Transform tf_transform;
-  if (!getTransform(data_->header.frame_id, data_->header.stamp, curr_time, tf_transform)) {
-    return;
-  }
-
   sensor_msgs::PointCloud2ConstIterator<float> iter_x(*data_, "x");
   sensor_msgs::PointCloud2ConstIterator<float> iter_y(*data_, "y");
   sensor_msgs::PointCloud2ConstIterator<float> iter_z(*data_, "z");
@@ -90,11 +82,10 @@ void PointCloud::getData(
   for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z) {
     // Transform point coordinates from source frame -> to base frame
     tf2::Vector3 p_v3_s(*iter_x, *iter_y, *iter_z);
-    tf2::Vector3 p_v3_b = tf_transform * p_v3_s;
 
     // Refill data array
-    if (p_v3_b.z() >= min_height_ && p_v3_b.z() <= max_height_) {
-      data.push_back({p_v3_b.x(), p_v3_b.y()});
+    if (p_v3_s.z() >= min_height_ && p_v3_s.z() <= max_height_) {
+      data.push_back({p_v3_s.x(), p_v3_s.y()});
     }
   }
 }

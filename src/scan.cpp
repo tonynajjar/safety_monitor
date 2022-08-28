@@ -25,11 +25,10 @@ Scan::Scan(
   const std::string & source_name,
   const std::shared_ptr<tf2_ros::Buffer> tf_buffer,
   const std::string & base_frame_id,
-  const std::string & global_frame_id,
   const tf2::Duration & transform_tolerance,
   const rclcpp::Duration & source_timeout)
 : Source(
-    node, source_name, tf_buffer, base_frame_id, global_frame_id,
+    node, source_name, tf_buffer, base_frame_id,
     transform_tolerance, source_timeout),
   data_(nullptr)
 {
@@ -73,13 +72,6 @@ void Scan::getData(
     return;
   }
 
-  // Obtaining the transform to get data from source frame and time where it was received
-  // to the base frame and current time
-  tf2::Transform tf_transform;
-  if (!getTransform(data_->header.frame_id, data_->header.stamp, curr_time, tf_transform)) {
-    return;
-  }
-
   // Calculate poses and refill data array
   float angle = data_->angle_min;
   for (size_t i = 0; i < data_->ranges.size(); i++) {
@@ -89,10 +81,8 @@ void Scan::getData(
         data_->ranges[i] * std::cos(angle),
         data_->ranges[i] * std::sin(angle),
         0.0);
-      tf2::Vector3 p_v3_b = tf_transform * p_v3_s;
-
       // Refill data array
-      data.push_back({p_v3_b.x(), p_v3_b.y()});
+      data.push_back({p_v3_s.x(), p_v3_s.y()});
     }
     angle += data_->angle_increment;
   }
