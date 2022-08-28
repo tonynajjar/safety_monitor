@@ -18,8 +18,6 @@
 #include <utility>
 #include <functional>
 
-#include "tf2_ros/create_timer_ros.h"
-
 #include "nav2_util/node_utils.hpp"
 
 namespace nav2_collision_monitor

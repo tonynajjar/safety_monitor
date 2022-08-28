@@ -76,12 +76,9 @@ void PointCloud::getData(
 
   // Refill data array with PointCloud points in base frame
   for (; iter_x != iter_x.end(); ++iter_x, ++iter_y, ++iter_z) {
-    // Transform point coordinates from source frame -> to base frame
-    tf2::Vector3 p_v3_s(*iter_x, *iter_y, *iter_z);
-
     // Refill data array
-    if (p_v3_s.z() >= min_height_ && p_v3_s.z() <= max_height_) {
-      data.push_back({p_v3_s.x(), p_v3_s.y()});
+    if (*iter_z >= min_height_ && *iter_z <= max_height_) {
+      data.push_back({*iter_x, *iter_y});
     }
   }
 }

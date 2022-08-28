@@ -72,13 +72,8 @@ void Scan::getData(
   float angle = data_->angle_min;
   for (size_t i = 0; i < data_->ranges.size(); i++) {
     if (data_->ranges[i] >= data_->range_min && data_->ranges[i] <= data_->range_max) {
-      // Transform point coordinates from source frame -> to base frame
-      tf2::Vector3 p_v3_s(
-        data_->ranges[i] * std::cos(angle),
-        data_->ranges[i] * std::sin(angle),
-        0.0);
       // Refill data array
-      data.push_back({p_v3_s.x(), p_v3_s.y()});
+      data.push_back({data_->ranges[i] * std::cos(angle), data_->ranges[i] * std::sin(angle)});
     }
     angle += data_->angle_increment;
   }
