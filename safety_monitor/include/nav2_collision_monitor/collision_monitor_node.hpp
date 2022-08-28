@@ -24,7 +24,6 @@
 #include "nav2_util/lifecycle_node.hpp"
 
 #include "nav2_collision_monitor/types.hpp"
-#include "nav2_collision_monitor/polygon.hpp"
 #include "nav2_collision_monitor/circle.hpp"
 #include "nav2_collision_monitor/source.hpp"
 #include "nav2_collision_monitor/scan.hpp"
@@ -94,11 +93,17 @@ protected:
 
   /**
    * @brief Supporting routine creating and configuring all data sources
-   * source->base time inerpolated transform.
    * @param source_timeout Maximum time interval in which data is considered valid
    * @return True if all sources were configured successfully or false in failure case
    */
   bool configureSources(const rclcpp::Duration & source_timeout);
+
+  /**
+   * @brief Supporting routine creating and configuring data sources' polygons
+   * @param source source to configure
+   * @return True if all polygons were configured successfully or false in failure case
+   */
+  bool configureSourcePolygons(std::shared_ptr<Source> source, std::string source_name);
 
   /**
    * @brief Main processing routine
@@ -115,9 +120,6 @@ protected:
 
   /// @brief Timer to run main process
   rclcpp::TimerBase::SharedPtr timer_;
-
-  /// @brief Polygons array
-  std::vector<std::shared_ptr<Polygon>> polygons_;
 
   /// @brief Data sources array
   std::vector<std::shared_ptr<Source>> sources_;

@@ -23,6 +23,7 @@
 
 #include "nav2_util/lifecycle_node.hpp"
 
+#include "nav2_collision_monitor/polygon.hpp"
 #include "nav2_collision_monitor/types.hpp"
 
 namespace nav2_collision_monitor
@@ -58,6 +59,9 @@ public:
   virtual void getData(
     const rclcpp::Time & curr_time,
     std::vector<Point> & data) const = 0;
+
+  /// @brief Polygons array
+  std::vector<std::shared_ptr<Polygon>> polygons;
 
 protected:
   /**

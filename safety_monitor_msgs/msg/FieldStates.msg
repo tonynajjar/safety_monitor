@@ -1,4 +1,4 @@
 std_msgs/Header header
 
-string[] name
+string[] names
 bool[] triggered

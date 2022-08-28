@@ -14,6 +14,8 @@
 
 #include "nav2_collision_monitor/collision_monitor_node.hpp"
 
+#include "safety_monitor_msgs/msg/field_states.hpp"
+
 #include <exception>
 #include <utility>
 #include <functional>
@@ -31,7 +33,9 @@ CollisionMonitor::CollisionMonitor(const rclcpp::NodeOptions & options)
 
 CollisionMonitor::~CollisionMonitor()
 {
-  polygons_.clear();
+  for (auto source : sources_) {
+    source->polygons.clear();
+  }
   sources_.clear();
 }
 
@@ -57,8 +61,10 @@ CollisionMonitor::on_activate(const rclcpp_lifecycle::State & /*state*/)
   RCLCPP_INFO(get_logger(), "Activating");
 
   // Activating polygons
-  for (std::shared_ptr<Polygon> polygon : polygons_) {
-    polygon->activate();
+  for (auto source : sources_) {
+    for (auto polygon : source->polygons) {
+      polygon->activate();
+    }
   }
 
   // Since polygons are being published when a scan appears,
@@ -83,8 +89,10 @@ CollisionMonitor::on_deactivate(const rclcpp_lifecycle::State & /*state*/)
   process_active_ = false;
 
   // Deactivating polygons
-  for (std::shared_ptr<Polygon> polygon : polygons_) {
-    polygon->deactivate();
+  for (auto source : sources_) {
+    for (auto polygon : source->polygons) {
+      polygon->deactivate();
+    }
   }
 
   // Destroying bond connection
@@ -98,7 +106,9 @@ CollisionMonitor::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
 {
   RCLCPP_INFO(get_logger(), "Cleaning up");
 
-  polygons_.clear();
+  for (auto source : sources_) {
+    source->polygons.clear();
+  }
   sources_.clear();
 
   return nav2_util::CallbackReturn::SUCCESS;
@@ -130,6 +140,46 @@ bool CollisionMonitor::getParameters()
   return true;
 }
 
+bool CollisionMonitor::configureSourcePolygons(
+  std::shared_ptr<Source> source,
+  std::string source_name)
+{
+  auto node = shared_from_this();
+
+  nav2_util::declare_parameter_if_not_declared(
+    node, source_name + ".polygons", rclcpp::ParameterValue(std::vector<std::string>()));
+  std::vector<std::string> polygon_names =
+    get_parameter(source_name + ".polygons").as_string_array();
+  for (std::string polygon_name : polygon_names) {
+    polygon_name = source_name + "." + polygon_name;
+    nav2_util::declare_parameter_if_not_declared(
+      node, polygon_name + ".type", rclcpp::PARAMETER_STRING);
+    const std::string polygon_type = get_parameter(polygon_name + ".type").as_string();
+
+    if (polygon_type == "polygon") {
+      source->polygons.push_back(
+        std::make_shared<Polygon>(
+          node, polygon_name));
+    } else if (polygon_type == "circle") {
+      source->polygons.push_back(
+        std::make_shared<Circle>(
+          node, polygon_name));
+    } else {     // Error if something else
+      RCLCPP_ERROR(
+        get_logger(),
+        "[%s]: Unknown polygon type: %s",
+        polygon_name.c_str(), polygon_type.c_str());
+      return false;
+    }
+
+    // Configure last added polygon
+    if (!source->polygons.back()->configure()) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool CollisionMonitor::configureSources(const rclcpp::Duration & source_timeout)
 {
   try {
@@ -148,16 +198,14 @@ bool CollisionMonitor::configureSources(const rclcpp::Duration & source_timeout)
       if (source_type == "scan") {
         std::shared_ptr<Scan> s = std::make_shared<Scan>(
           node, source_name, source_timeout);
-
         s->configure();
-
+        configureSourcePolygons(s, source_name);
         sources_.push_back(s);
       } else if (source_type == "pointcloud") {
         std::shared_ptr<PointCloud> p = std::make_shared<PointCloud>(
           node, source_name, source_timeout);
-
         p->configure();
-
+        configureSourcePolygons(p, source_name);
         sources_.push_back(p);
       } else {  // Error if something else
         RCLCPP_ERROR(
@@ -166,39 +214,6 @@ bool CollisionMonitor::configureSources(const rclcpp::Duration & source_timeout)
           source_name.c_str(), source_type.c_str());
         return false;
       }
-
-      nav2_util::declare_parameter_if_not_declared(
-        node, source_name + ".polygons", rclcpp::ParameterValue(std::vector<std::string>()));
-      std::vector<std::string> polygon_names =
-        get_parameter(source_name + ".polygons").as_string_array();
-      for (std::string polygon_name : polygon_names) {
-        polygon_name = source_name + "." + polygon_name;
-        nav2_util::declare_parameter_if_not_declared(
-          node, polygon_name + ".type", rclcpp::PARAMETER_STRING);
-        const std::string polygon_type = get_parameter(polygon_name + ".type").as_string();
-
-        if (polygon_type == "polygon") {
-          polygons_.push_back(
-            std::make_shared<Polygon>(
-              node, polygon_name));
-        } else if (polygon_type == "circle") {
-          polygons_.push_back(
-            std::make_shared<Circle>(
-              node, polygon_name));
-        } else { // Error if something else
-          RCLCPP_ERROR(
-            get_logger(),
-            "[%s]: Unknown polygon type: %s",
-            polygon_name.c_str(), polygon_type.c_str());
-          return false;
-        }
-
-        // Configure last added polygon
-        if (!polygons_.back()->configure()) {
-          return false;
-        }
-      }
-
     }
   } catch (const std::exception & ex) {
     RCLCPP_ERROR(get_logger(), "Error while getting parameters: %s", ex.what());
@@ -223,26 +238,24 @@ void CollisionMonitor::process()
 
   // Fill collision_points array from different data sources
   for (std::shared_ptr<Source> source : sources_) {
+    auto msg = safety_monitor_msgs::msg::FieldStates();
     source->getData(curr_time, collision_points);
-  }
 
-  for (std::shared_ptr<Polygon> polygon : polygons_) {
-
-    if (polygon->getPointsInside(collision_points) > polygon->getMaxPoints()) {
-      RCLCPP_ERROR(get_logger(), "EHRE");
-
+    for (auto polygon : source->polygons) {
+      msg.names.push_back(polygon->getName());
+      msg.triggered.push_back(polygon->getPointsInside(collision_points) > polygon->getMaxPoints());
     }
-
+    source->pub_.publish(msg);
   }
-
-  // Publish polygons for better visualization
   publishPolygons();
 }
 
 void CollisionMonitor::publishPolygons() const
 {
-  for (std::shared_ptr<Polygon> polygon : polygons_) {
-    polygon->publish();
+  for (auto source : sources_) {
+    for (auto polygon : source->polygons) {
+      polygon->publish();
+    }
   }
 }
 
