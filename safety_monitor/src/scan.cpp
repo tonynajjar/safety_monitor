@@ -44,15 +44,17 @@ void Scan::configure()
     throw std::runtime_error{"Failed to lock node"};
   }
 
-  std::string source_topic;
+  std::string source_topic, topic_out;
 
   // Laser scanner has no own parameters
-  getCommonParameters(source_topic);
+  getCommonParameters(source_topic, topic_out);
 
-  rclcpp::QoS scan_qos = rclcpp::SensorDataQoS();  // set to default
   data_sub_ = node->create_subscription<sensor_msgs::msg::LaserScan>(
-    source_topic, scan_qos,
+    source_topic, rclcpp::SensorDataQoS(),
     std::bind(&Scan::dataCallback, this, std::placeholders::_1));
+
+  pub_ = node->create_publisher<safety_monitor_msgs::msg::FieldStates>(
+    topic_out, rclcpp::SystemDefaultsQoS());
 }
 
 void Scan::getData(

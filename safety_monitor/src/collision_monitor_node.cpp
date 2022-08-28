@@ -229,6 +229,8 @@ void CollisionMonitor::process()
   for (std::shared_ptr<Polygon> polygon : polygons_) {
 
     if (polygon->getPointsInside(collision_points) > polygon->getMaxPoints()) {
+      RCLCPP_ERROR(get_logger(), "EHRE");
+
     }
 
   }

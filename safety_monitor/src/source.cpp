@@ -35,7 +35,7 @@ Source::~Source()
 {
 }
 
-void Source::getCommonParameters(std::string & source_topic)
+void Source::getCommonParameters(std::string & source_topic, std::string & topic_out)
 {
   auto node = node_.lock();
   if (!node) {
@@ -44,8 +44,12 @@ void Source::getCommonParameters(std::string & source_topic)
 
   nav2_util::declare_parameter_if_not_declared(
     node, source_name_ + ".topic",
-    rclcpp::ParameterValue("scan"));  // Set deafult topic for laser scanner
+    rclcpp::ParameterValue("scan"));  // Set default topic for laser scanner
   source_topic = node->get_parameter(source_name_ + ".topic").as_string();
+  nav2_util::declare_parameter_if_not_declared(
+    node, source_name_ + ".topic_out",
+    rclcpp::ParameterValue("out"));  // Set default topic for laser scanner
+  topic_out = node->get_parameter(source_name_ + ".topic_out").as_string();
 }
 
 bool Source::sourceValid(

@@ -8,6 +8,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(safety_monitor_msgs REQUIRED)
 find_package(nav2_common REQUIRED)
 find_package(nav2_util REQUIRED)
 
@@ -26,6 +27,7 @@ set(dependencies
   rclcpp_components
   sensor_msgs
   geometry_msgs
+  safety_monitor_msgs
   nav2_util
 )
 

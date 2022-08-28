@@ -127,7 +127,7 @@ void Polygon::publish() const
   std::unique_ptr<geometry_msgs::msg::PolygonStamped> poly_s =
     std::make_unique<geometry_msgs::msg::PolygonStamped>();
   poly_s->header.stamp = node->now();
-  poly_s->header.frame_id = "TODO"; // TODO: this should be the source frame
+  poly_s->header.frame_id = frame_id_;
   poly_s->polygon = polygon_;
 
   // Publish polygon
@@ -142,6 +142,10 @@ bool Polygon::getCommonParameters(std::string & polygon_pub_topic)
   }
 
   try {
+    nav2_util::declare_parameter_if_not_declared(
+      node, polygon_name_ + ".frame_id", rclcpp::ParameterValue("scan"));
+    frame_id_ = node->get_parameter(polygon_name_ + ".frame_id").as_string();
+
     nav2_util::declare_parameter_if_not_declared(
       node, polygon_name_ + ".max_points", rclcpp::ParameterValue(3));
     max_points_ = node->get_parameter(polygon_name_ + ".max_points").as_int();

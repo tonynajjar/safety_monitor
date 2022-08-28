@@ -11,16 +11,19 @@ collision_monitor:
     scan:
       type: "scan"
       topic: "/amr2/forward_lidar"
-      polygons: ["PolygonStop", "PolygonSlow"]
-      PolygonStop:
+      topic_out: "/amr2/forward_lidar/fields"
+      polygons: ["Emergency", "Warning"]
+      Emergency:
         type: "polygon"
+        frame_id: "forward_lidar"
         points: [0.3, 0.3, 0.3, -0.3, 0.0, -0.3, 0.0, 0.3]
         max_points: 3
         visualize: True
-        polygon_pub_topic: "polygon_stop"
-      PolygonSlow:
+        polygon_pub_topic: "emergency"
+      Warning:
         type: "polygon"
+        frame_id: "backward_lidar"
         points: [0.4, 0.4, 0.4, -0.4, -0.4, -0.4, -0.4, 0.4]
         max_points: 3
         visualize: True
-        polygon_pub_topic: "polygon_slowdown"
+        polygon_pub_topic: "warning"

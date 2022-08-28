@@ -63,8 +63,9 @@ protected:
   /**
    * @brief Supporting routine obtaining ROS-parameters common for all data sources
    * @param source_topic Output name of source subscription topic
+   * @param topic_out Topic name for triggered polygons
    */
-  void getCommonParameters(std::string & source_topic);
+  void getCommonParameters(std::string & source_topic, std::string & topic_out);
 
   /**
    * @brief Checks whether the source data might be considered as valid

@@ -126,6 +126,8 @@ protected:
   rclcpp::Logger logger_{rclcpp::get_logger("collision_monitor")};
 
   // Basic parameters
+  /// @brief Frame name of the source
+  std::string frame_id_;
   /// @brief Name of polygon
   std::string polygon_name_;
   /// @brief Maximum number of data readings within a zone to not trigger the action
