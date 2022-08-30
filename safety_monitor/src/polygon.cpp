@@ -46,27 +46,19 @@ bool Polygon::configure()
     throw std::runtime_error{"Failed to lock node"};
   }
 
-  std::string polygon_pub_topic;
-
-  if (!getParameters(polygon_pub_topic)) {
+  if (!getParameters()) {
     return false;
   }
 
-  if (visualize_) {
-    // Fill polygon_ points for future usage
-    std::vector<Point> poly;
-    getPolygon(poly);
-    for (const Point & p : poly) {
-      geometry_msgs::msg::Point32 p_s;
-      p_s.x = p.x;
-      p_s.y = p.y;
-      // p_s.z will remain 0.0
-      polygon_.points.push_back(p_s);
-    }
-
-    rclcpp::QoS polygon_qos = rclcpp::SystemDefaultsQoS();  // set to default
-    polygon_pub_ = node->create_publisher<visualization_msgs::msg::Marker>(
-      polygon_pub_topic, polygon_qos);
+  // Fill polygon_ points for future usage
+  std::vector<Point> poly;
+  getPolygon(poly);
+  for (const Point & p : poly) {
+    geometry_msgs::msg::Point32 p_s;
+    p_s.x = p.x;
+    p_s.y = p.y;
+    // p_s.z will remain 0.0
+    polygon_.points.push_back(p_s);
   }
 
   return true;
@@ -74,16 +66,10 @@ bool Polygon::configure()
 
 void Polygon::activate()
 {
-  if (visualize_) {
-    polygon_pub_->on_activate();
-  }
 }
 
 void Polygon::deactivate()
 {
-  if (visualize_) {
-    polygon_pub_->on_deactivate();
-  }
 }
 
 std::string Polygon::getName() const
@@ -112,12 +98,8 @@ int Polygon::getPointsInside(const std::vector<Point> & points) const
   return num;
 }
 
-void Polygon::publish() const
+visualization_msgs::msg::Marker Polygon::getMarker(bool triggered) const
 {
-  if (!visualize_) {
-    return;
-  }
-
   auto node = node_.lock();
   if (!node) {
     throw std::runtime_error{"Failed to lock node"};
@@ -142,7 +124,7 @@ void Polygon::publish() const
   marker.color.r = 0.0;
   marker.color.g = 0.0;
   marker.color.b = 0.0;
-  marker.color.a = 0.8;
+  marker.color.a = triggered ? 0.8 : 0.1;
 
   marker.pose.orientation.x = 0.0;
   marker.pose.orientation.y = 0.0;
@@ -166,9 +148,7 @@ void Polygon::publish() const
     color.a = 1.0;
     marker.colors.push_back(color);
   }
-
-  // Publish polygon
-  polygon_pub_->publish(std::move(marker));
+  return marker;
 }
 
 geometry_msgs::msg::Point Polygon::createPoint(const double& x, const double& y, const double& z) const
@@ -180,7 +160,7 @@ geometry_msgs::msg::Point Polygon::createPoint(const double& x, const double& y,
   return p;
 }
 
-bool Polygon::getCommonParameters(std::string & polygon_pub_topic)
+bool Polygon::getCommonParameters()
 {
   auto node = node_.lock();
   if (!node) {
@@ -195,16 +175,6 @@ bool Polygon::getCommonParameters(std::string & polygon_pub_topic)
     nav2_util::declare_parameter_if_not_declared(
       node, polygon_name_ + ".max_points", rclcpp::ParameterValue(3));
     max_points_ = node->get_parameter(polygon_name_ + ".max_points").as_int();
-
-    nav2_util::declare_parameter_if_not_declared(
-      node, polygon_name_ + ".visualize", rclcpp::ParameterValue(false));
-    visualize_ = node->get_parameter(polygon_name_ + ".visualize").as_bool();
-    if (visualize_) {
-      // Get polygon topic parameter in case if it is going to be published
-      nav2_util::declare_parameter_if_not_declared(
-        node, polygon_name_ + ".polygon_pub_topic", rclcpp::ParameterValue(polygon_name_));
-      polygon_pub_topic = node->get_parameter(polygon_name_ + ".polygon_pub_topic").as_string();
-    }
   } catch (const std::exception & ex) {
     RCLCPP_ERROR(
       logger_,
@@ -212,23 +182,21 @@ bool Polygon::getCommonParameters(std::string & polygon_pub_topic)
       polygon_name_.c_str(), ex.what());
     return false;
   }
-
   return true;
 }
 
-bool Polygon::getParameters(std::string & polygon_pub_topic)
+bool Polygon::getParameters()
 {
   auto node = node_.lock();
   if (!node) {
     throw std::runtime_error{"Failed to lock node"};
   }
 
-  if (!getCommonParameters(polygon_pub_topic)) {
+  if (!getCommonParameters()) {
     return false;
   }
 
   try {
-
     // Leave it not initialized: the will cause an error if it will not set
     nav2_util::declare_parameter_if_not_declared(
       node, polygon_name_ + ".points", rclcpp::PARAMETER_DOUBLE_ARRAY);

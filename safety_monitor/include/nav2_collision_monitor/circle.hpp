@@ -59,11 +59,9 @@ public:
 protected:
   /**
    * @brief Supporting routine obtaining polygon-specific ROS-parameters
-   * @param polygon_pub_topic Output name of polygon publishing topic
-   * there is no footprint subscription in this class.
    * @return True if all parameters were obtained or false in failure case
    */
-  bool getParameters(std::string & polygon_pub_topic) override;
+  bool getParameters() override;
 
   // ----- Variables -----
 

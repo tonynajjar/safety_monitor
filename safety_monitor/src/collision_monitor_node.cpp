@@ -34,7 +34,7 @@ CollisionMonitor::CollisionMonitor(const rclcpp::NodeOptions & options)
 CollisionMonitor::~CollisionMonitor()
 {
   for (auto source : sources_) {
-    source->polygons.clear();
+    source->polygons_.clear();
   }
   sources_.clear();
 }
@@ -62,14 +62,10 @@ CollisionMonitor::on_activate(const rclcpp_lifecycle::State & /*state*/)
 
   // Activating polygons
   for (auto source : sources_) {
-    for (auto polygon : source->polygons) {
+    for (auto polygon : source->polygons_) {
       polygon->activate();
     }
   }
-
-  // Since polygons are being published when a scan appears,
-  // we need to publish polygons first time to display them at startup
-  publishPolygons();
 
   // Activating main worker
   process_active_ = true;
@@ -90,7 +86,7 @@ CollisionMonitor::on_deactivate(const rclcpp_lifecycle::State & /*state*/)
 
   // Deactivating polygons
   for (auto source : sources_) {
-    for (auto polygon : source->polygons) {
+    for (auto polygon : source->polygons_) {
       polygon->deactivate();
     }
   }
@@ -107,7 +103,7 @@ CollisionMonitor::on_cleanup(const rclcpp_lifecycle::State & /*state*/)
   RCLCPP_INFO(get_logger(), "Cleaning up");
 
   for (auto source : sources_) {
-    source->polygons.clear();
+    source->polygons_.clear();
   }
   sources_.clear();
 
@@ -157,11 +153,11 @@ bool CollisionMonitor::configureSourcePolygons(
     const std::string polygon_type = get_parameter(polygon_name + ".type").as_string();
 
     if (polygon_type == "polygon") {
-      source->polygons.push_back(
+      source->polygons_.push_back(
         std::make_shared<Polygon>(
           node, polygon_name));
     } else if (polygon_type == "circle") {
-      source->polygons.push_back(
+      source->polygons_.push_back(
         std::make_shared<Circle>(
           node, polygon_name));
     } else {     // Error if something else
@@ -173,7 +169,7 @@ bool CollisionMonitor::configureSourcePolygons(
     }
 
     // Configure last added polygon
-    if (!source->polygons.back()->configure()) {
+    if (!source->polygons_.back()->configure()) {
       return false;
     }
   }
@@ -235,25 +231,7 @@ void CollisionMonitor::process()
 
   // Fill collision_points array from different data sources
   for (std::shared_ptr<Source> source : sources_) {
-    auto msg = safety_monitor_msgs::msg::FieldStates();
-    std::vector<Point> collision_points;
-    source->getData(curr_time, collision_points);
-
-    for (auto polygon : source->polygons) {
-      msg.names.push_back(polygon->getName());
-      msg.triggered.push_back(polygon->getPointsInside(collision_points) > polygon->getMaxPoints());
-    }
-    source->pub_->publish(msg);
-  }
-  publishPolygons();
-}
-
-void CollisionMonitor::publishPolygons() const
-{
-  for (auto source : sources_) {
-    for (auto polygon : source->polygons) {
-      polygon->publish();
-    }
+    source->publish(curr_time);
   }
 }
 

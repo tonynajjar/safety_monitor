@@ -67,14 +67,14 @@ int Circle::getPointsInside(const std::vector<Point> & points) const
   return num;
 }
 
-bool Circle::getParameters(std::string & polygon_pub_topic)
+bool Circle::getParameters()
 {
   auto node = node_.lock();
   if (!node) {
     throw std::runtime_error{"Failed to lock node"};
   }
 
-  if (!getCommonParameters(polygon_pub_topic)) {
+  if (!getCommonParameters()) {
     return false;
   }
 

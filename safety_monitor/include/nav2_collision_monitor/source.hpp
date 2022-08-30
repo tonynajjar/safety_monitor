@@ -21,6 +21,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "safety_monitor_msgs/msg/field_states.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
 
 #include "nav2_util/lifecycle_node.hpp"
 
@@ -61,11 +62,19 @@ public:
     const rclcpp::Time & curr_time,
     std::vector<Point> & data) const = 0;
 
+  /**
+   * @brief Publish FieldStates and Markers
+   */
+  void publish(rclcpp::Time curr_time) const;
+
   /// @brief Polygons array
-  std::vector<std::shared_ptr<Polygon>> polygons;
+  std::vector<std::shared_ptr<Polygon>> polygons_;
 
   /// @brief FieldStates publisher
-  rclcpp_lifecycle::LifecyclePublisher<safety_monitor_msgs::msg::FieldStates>::SharedPtr pub_;
+  rclcpp_lifecycle::LifecyclePublisher<safety_monitor_msgs::msg::FieldStates>::SharedPtr field_states_pub_;
+
+  /// @brief MarkerArray publisher
+  rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::MarkerArray>::SharedPtr markers_pub_;
 
 protected:
   /**

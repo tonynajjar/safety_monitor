@@ -92,9 +92,9 @@ public:
   virtual int getPointsInside(const std::vector<Point> & points) const;
 
   /**
-   * @brief Publishes polygon message into a its own topic
+   * @brief Return visualization marker
    */
-  void publish() const;
+  visualization_msgs::msg::Marker getMarker(bool triggered) const;
 
   /**
    * @brief Helper function for creating a Point
@@ -105,17 +105,15 @@ public:
 protected:
   /**
    * @brief Supporting routine obtaining ROS-parameters common for all shapes
-   * @param polygon_pub_topic Output name of polygon publishing topic
    * @return True if all parameters were obtained or false in failure case
    */
-  bool getCommonParameters(std::string & polygon_pub_topic);
+  bool getCommonParameters();
 
   /**
    * @brief Supporting routine obtaining polygon-specific ROS-parameters
-   * @param polygon_pub_topic Output name of polygon publishing topic
    * @return True if all parameters were obtained or false in failure case
    */
-  virtual bool getParameters(std::string & polygon_pub_topic);
+  virtual bool getParameters();
 
   /**
    * @brief Checks if point is inside polygon
@@ -142,12 +140,8 @@ protected:
   double simulation_time_step_;
 
   // Visualization
-  /// @brief Whether to publish the polygon
-  bool visualize_;
   /// @brief Polygon points stored for later publishing
   geometry_msgs::msg::Polygon polygon_;
-  /// @brief Polygon publisher for visualization purposes
-  rclcpp_lifecycle::LifecyclePublisher<visualization_msgs::msg::Marker>::SharedPtr polygon_pub_;
 
   /// @brief Polygon points (vertices)
   std::vector<Point> poly_;

@@ -110,12 +110,6 @@ protected:
    */
   void process();
 
-
-  /**
-   * @brief Polygons publishing routine. Made for visualization.
-   */
-  void publishPolygons() const;
-
   // ----- Variables -----
 
   /// @brief Timer to run main process

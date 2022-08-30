@@ -35,6 +35,24 @@ Source::~Source()
 {
 }
 
+void Source::publish(rclcpp::Time curr_time) const
+{
+  safety_monitor_msgs::msg::FieldStates fieldStateMsg;
+  visualization_msgs::msg::MarkerArray markers;
+
+  std::vector<Point> collision_points;
+  getData(curr_time, collision_points);
+
+  for (auto polygon : polygons_) {
+    bool triggered = polygon->getPointsInside(collision_points) > polygon->getMaxPoints();
+    fieldStateMsg.names.push_back(polygon->getName());
+    fieldStateMsg.triggered.push_back(triggered);
+    markers.markers.push_back(polygon->getMarker(triggered));
+  }
+  field_states_pub_->publish(fieldStateMsg); // TODO std::move(fieldStateMsg)?
+  markers_pub_->publish(markers);
+}
+
 void Source::getCommonParameters(std::string & source_topic)
 {
   auto node = node_.lock();
@@ -50,10 +68,18 @@ void Source::getCommonParameters(std::string & source_topic)
     node, source_name_ + ".topic_out",
     rclcpp::ParameterValue("out"));  // Set default topic for laser scanner
   std::string topic_out = node->get_parameter(source_name_ + ".topic_out").as_string();
+  nav2_util::declare_parameter_if_not_declared(
+    node, source_name_ + ".polygon_pub_topic",
+    rclcpp::ParameterValue("out"));  // Set default topic for laser scanner
+  std::string polygon_pub_topic = node->get_parameter(source_name_ + ".polygon_pub_topic").as_string();
 
-  pub_ = node->create_publisher<safety_monitor_msgs::msg::FieldStates>(
+  field_states_pub_ = node->create_publisher<safety_monitor_msgs::msg::FieldStates>(
     topic_out, rclcpp::SystemDefaultsQoS()); // TODO: move to a configuration step
-  pub_->on_activate();
+  field_states_pub_->on_activate();
+
+  markers_pub_ = node->create_publisher<visualization_msgs::msg::MarkerArray>(
+    polygon_pub_topic, rclcpp::SystemDefaultsQoS()); // TODO: move to a configuration step
+  markers_pub_->on_activate();
 }
 
 bool Source::sourceValid(
