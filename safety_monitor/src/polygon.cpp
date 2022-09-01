@@ -16,6 +16,7 @@
 
 #include <exception>
 #include <utility>
+#include "earcut.hpp"
 
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/point32.hpp"
@@ -48,17 +49,6 @@ bool Polygon::configure()
 
   if (!getParameters()) {
     return false;
-  }
-
-  // Fill polygon_ points for future usage
-  std::vector<Point> poly;
-  getPolygon(poly);
-  for (const Point & p : poly) {
-    geometry_msgs::msg::Point32 p_s;
-    p_s.x = p.x;
-    p_s.y = p.y;
-    // p_s.z will remain 0.0
-    polygon_.points.push_back(p_s);
   }
 
   return true;
@@ -105,8 +95,20 @@ visualization_msgs::msg::Marker Polygon::getMarker(bool triggered) const
     throw std::runtime_error{"Failed to lock node"};
   }
 
-  geometry_msgs::msg::Polygon polygon = polygon_;
-  polygon.points.push_back(polygon.points.front()); // to fill up the polygon
+  //polygon.points.push_back(polygon.points.front()); // to fill up the polygon
+  std::vector<Point> poly;
+  getPolygon(poly);
+  std::vector<std::vector<std::array<double, 2>>> polygon;
+  std::vector<std::array<double, 2>> polylines;
+
+  for(auto & point : poly){
+    std::array<double, 2> arr{point.x, point.y};
+    polylines.push_back(arr);
+  }
+
+  polygon.push_back(polylines);
+
+  std::vector<uint32_t> indices = mapbox::earcut<uint32_t>(polygon);
 
   visualization_msgs::msg::Marker marker;
   std_msgs::msg::ColorRGBA color;
@@ -134,29 +136,30 @@ visualization_msgs::msg::Marker Polygon::getMarker(bool triggered) const
   marker.pose.position.y = 0.0;
   marker.pose.position.z = 0.0;
 
-  marker.points.reserve(3 * (polygon.points.size() - 1));
-  marker.colors.reserve(polygon.points.size() - 1);
+  marker.points.reserve(indices.size());
+  marker.colors.reserve(indices.size());
 
-  for (std::size_t i = 1; i < polygon.points.size(); ++i)
+  for (std::size_t i = 0; i < indices.size() - 1; i = i+3)
   {
-    marker.points.push_back(createPoint(0.0, 0.0, 0.0));
-    marker.points.push_back(createPoint(polygon.points.at(i - 1).x, polygon.points.at(i - 1).y, 0.0));
-    marker.points.push_back(createPoint(polygon.points.at(i).x, polygon.points.at(i).y, 0.0));
+    marker.points.push_back(createPoint(polylines[indices[i]]));
+    marker.points.push_back(createPoint(polylines[indices[i+1]]));
+    marker.points.push_back(createPoint(polylines[indices[i+2]]));
     color.r = 0.0;
     color.g = 1.0;
     color.b = 0.0;
     color.a = 1.0;
     marker.colors.push_back(color);
   }
+
   return marker;
 }
 
-geometry_msgs::msg::Point Polygon::createPoint(const double& x, const double& y, const double& z) const
+
+geometry_msgs::msg::Point Polygon::createPoint(const std::array<double, 2>& arr) const
 {
   geometry_msgs::msg::Point p;
-  p.x = x;
-  p.y = y;
-  p.z = z;
+  p.x = arr[0];
+  p.y = arr[1];
   return p;
 }
 

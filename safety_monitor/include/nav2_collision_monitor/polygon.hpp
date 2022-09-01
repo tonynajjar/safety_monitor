@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "rclcpp/rclcpp.hpp"
-#include "geometry_msgs/msg/polygon.hpp"
 #include "visualization_msgs/msg/marker.hpp"
 
 #include "nav2_util/lifecycle_node.hpp"
@@ -99,7 +98,7 @@ public:
   /**
    * @brief Helper function for creating a Point
    */
-  geometry_msgs::msg::Point createPoint(const double& x, const double& y, const double& z) const;
+  geometry_msgs::msg::Point createPoint(const std::array<double, 2> & arr) const;
 
 
 protected:
@@ -140,9 +139,6 @@ protected:
   double simulation_time_step_;
 
   // Visualization
-  /// @brief Polygon points stored for later publishing
-  geometry_msgs::msg::Polygon polygon_;
-
   /// @brief Polygon points (vertices)
   std::vector<Point> poly_;
 };  // class Polygon
